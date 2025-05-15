@@ -1,3 +1,102 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import type { Product } from '~/services/user-service';
+
+const { $api } = useNuxtApp();
+
+async function choiceCategory(name: string) {
+  const response = await $api<Product[]>(`/products?category_name=${name}`);
+  produtos.value = response;
+}
+
+const categories = ref([
+  { id: 1, name: 'Todos' },
+  { id: 5, name: 'Lanches' },
+  { id: 7, name: 'Acompanhamento' },
+  { id: 6, name: 'Bebidas' },
+  { id: 8, name: 'Sobremesas' },
+]);
+
+const produtos = ref<Product[]>([]);
+
+onMounted(async () => {
+  const response = await $api<Product[]>('/products');
+  produtos.value = response;
+});
+
+// const produtos = ref([
+//   { 
+//     id: 1, 
+//     nome: 'X-Burger', 
+//     descricao: 'Hambúrguer, queijo, alface, tomate e maionese', 
+//     preco: 18.90, 
+//     imagem: '/placeholder.svg?height=200&width=300',
+//     categoriaId: 2 
+//   },
+//   { 
+//     id: 2, 
+//     nome: 'X-Salada', 
+//     descricao: 'Hambúrguer, queijo, alface, tomate, cebola e maionese', 
+//     preco: 20.90, 
+//     imagem: '/placeholder.svg?height=200&width=300', 
+//     categoriaId: 2 
+//   },
+//   { 
+//     id: 3, 
+//     nome: 'Refrigerante', 
+//     descricao: 'Lata 350ml', 
+//     preco: 5.90, 
+//     imagem: '/placeholder.svg?height=200&width=300', 
+//     categoriaId: 3 
+//   },
+//   { 
+//     id: 4, 
+//     nome: 'Milk Shake', 
+//     descricao: 'Chocolate, morango ou baunilha', 
+//     preco: 12.90, 
+//     imagem: '/placeholder.svg?height=200&width=300', 
+//     categoriaId: 4 
+//   },
+//   { 
+//     id: 5, 
+//     nome: 'Combo Família', 
+//     descricao: '4 lanches, 4 bebidas e 2 sobremesas', 
+//     preco: 89.90, 
+//     imagem: '/placeholder.svg?height=200&width=300', 
+//     categoriaId: 5 
+//   },
+// ]);
+
+const categoriaAtual = ref(1);
+const carrinho = ref<Product[]>([]);
+
+const produtosFiltrados = computed(() => {
+  if (categoriaAtual.value === 1) {
+    return produtos.value;
+  }
+  return produtos.value.filter(p => p.category_id === categoriaAtual.value);
+});
+
+// Total do carrinho
+// const totalCarrinho = computed(() => {
+//   return carrinho.value.reduce((total, item) => total + (item.preco * item.quantidade), 0);
+// });
+
+// Adicionar produto ao carrinho
+// const adicionarAoCarrinho = (produto: Product) => {
+//   const itemExistente = carrinho.value.find(item => item.id === produto.id);
+  
+//   if (itemExistente) {
+//     itemExistente.quantidade += 1;
+//   } else {
+//     carrinho.value.push({
+//       ...produto,
+//       quantidade: 1
+//     });
+//   }
+// };
+</script>
+
 <template>
   <div class="min-h-screen bg-gray-100 pb-20">
     <header class="bg-white shadow-md p-4 sticky top-0 z-10">
@@ -19,9 +118,9 @@
       <div class="mb-6">
         <div class="flex overflow-x-auto space-x-2 py-4 px-2 -mx-2">
           <button 
-            v-for="categoria in categorias" 
+            v-for="categoria in categories" 
             :key="categoria.id"
-            @click="categoriaAtual = categoria.id"
+            @click="choiceCategory(categoria.name)"
             :class="[
               'px-4 py-2 rounded-full whitespace-nowrap transition-colors',
               categoriaAtual === categoria.id 
@@ -29,7 +128,7 @@
                 : 'bg-white text-gray-700 hover:bg-gray-100'
             ]"
           >
-            {{ categoria.nome }}
+            {{ categoria.name }}
           </button>
         </div>
       </div>
@@ -41,15 +140,15 @@
           class="bg-white rounded-xl shadow-md overflow-hidden"
         >
           <div class="h-48 overflow-hidden">
-            <img :src="produto.imagem" :alt="produto.nome" class="w-full h-full object-cover" />
+            <img :src="produto.image_url" :alt="produto.name" class="w-full h-full object-cover" />
           </div>
           <div class="p-4">
-            <h3 class="text-lg font-semibold text-gray-800">{{ produto.nome }}</h3>
-            <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ produto.descricao }}</p>
+            <h3 class="text-lg font-semibold text-gray-800">{{ produto.name }}</h3>
+            <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ produto.description }}</p>
             <div class="mt-4 flex justify-between items-center">
-              <span class="text-lg font-bold text-emerald-700">R$ {{ produto.preco.toFixed(2) }}</span>
+              <span class="text-lg font-bold text-emerald-700">R$ {{ produto.price.toFixed(2) }}</span>
+              <!-- @click="adicionarAoCarrinho(produto)" -->
               <button 
-                @click="adicionarAoCarrinho(produto)"
                 class="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 Adicionar
@@ -63,7 +162,7 @@
     <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4">
       <div class="container mx-auto flex justify-between items-center">
         <div>
-          <p class="text-gray-600">Total: <span class="font-bold text-gray-800">R$ {{ totalCarrinho.toFixed(2) }}</span></p>
+          <p class="text-gray-600">Total: <span class="font-bold text-gray-800">R$ {{ "totalCarrinho.toFixed(2)" }}</span></p>
         </div>
         <NuxtLink 
           to="/carrinho" 
@@ -81,89 +180,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed } from 'vue';
-
-// Dados simulados
-const categorias = ref([
-  { id: 1, nome: 'Todos' },
-  { id: 2, nome: 'Lanches' },
-  { id: 3, nome: 'Bebidas' },
-  { id: 4, nome: 'Sobremesas' },
-  { id: 5, nome: 'Combos' },
-]);
-
-const produtos = ref([
-  { 
-    id: 1, 
-    nome: 'X-Burger', 
-    descricao: 'Hambúrguer, queijo, alface, tomate e maionese', 
-    preco: 18.90, 
-    imagem: '/placeholder.svg?height=200&width=300', 
-    categoriaId: 2 
-  },
-  { 
-    id: 2, 
-    nome: 'X-Salada', 
-    descricao: 'Hambúrguer, queijo, alface, tomate, cebola e maionese', 
-    preco: 20.90, 
-    imagem: '/placeholder.svg?height=200&width=300', 
-    categoriaId: 2 
-  },
-  { 
-    id: 3, 
-    nome: 'Refrigerante', 
-    descricao: 'Lata 350ml', 
-    preco: 5.90, 
-    imagem: '/placeholder.svg?height=200&width=300', 
-    categoriaId: 3 
-  },
-  { 
-    id: 4, 
-    nome: 'Milk Shake', 
-    descricao: 'Chocolate, morango ou baunilha', 
-    preco: 12.90, 
-    imagem: '/placeholder.svg?height=200&width=300', 
-    categoriaId: 4 
-  },
-  { 
-    id: 5, 
-    nome: 'Combo Família', 
-    descricao: '4 lanches, 4 bebidas e 2 sobremesas', 
-    preco: 89.90, 
-    imagem: '/placeholder.svg?height=200&width=300', 
-    categoriaId: 5 
-  },
-]);
-
-const categoriaAtual = ref(1);
-const carrinho = ref([]);
-
-// Produtos filtrados por categoria
-const produtosFiltrados = computed(() => {
-  if (categoriaAtual.value === 1) {
-    return produtos.value;
-  }
-  return produtos.value.filter(p => p.categoriaId === categoriaAtual.value);
-});
-
-// Total do carrinho
-const totalCarrinho = computed(() => {
-  return carrinho.value.reduce((total, item) => total + (item.preco * item.quantidade), 0);
-});
-
-// Adicionar produto ao carrinho
-const adicionarAoCarrinho = (produto) => {
-  const itemExistente = carrinho.value.find(item => item.id === produto.id);
-  
-  if (itemExistente) {
-    itemExistente.quantidade += 1;
-  } else {
-    carrinho.value.push({
-      ...produto,
-      quantidade: 1
-    });
-  }
-};
-</script>
