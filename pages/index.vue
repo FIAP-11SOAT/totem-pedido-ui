@@ -15,7 +15,7 @@
           <span class="text-lg font-medium">Acompanhar Pedido</span>
         </NuxtLink>
         
-        <NuxtLink to="/admin" class="mt-6 flex items-center justify-center w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
+        <NuxtLink to="/admin/admin" class="mt-6 flex items-center justify-center w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
           <span>Área Administrativa</span>
         </NuxtLink>
       </div>
