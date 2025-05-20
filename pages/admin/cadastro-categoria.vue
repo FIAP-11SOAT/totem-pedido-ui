@@ -2,14 +2,14 @@
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
       <div class="border-b pb-4 mb-6">
-        <h1 class="text-xl font-semibold text-gray-800">Cadastro de Produtos</h1>
+        <h1 class="text-xl font-semibold text-gray-800">Cadastro de Categorias</h1>
       </div>
 
       <form @submit.prevent="submitForm" class="space-y-4">
         <div>
           <label for="nome" class="block text-sm font-medium text-gray-700">Nome</label>
           <input
-            v-model="produto.name"
+            v-model="categoria.name"
             id="nome"
             required
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -19,41 +19,8 @@
         <div>
           <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
           <input
-            v-model="produto.description"
+            v-model="categoria.description"
             id="descricao"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          />
-        </div>
-
-        <div>
-          <label for="preco" class="block text-sm font-medium text-gray-700">Preço</label>
-          <input
-            v-model.number="produto.price"
-            id="preco"
-            type="number"
-            step="0.01"
-            required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          />
-        </div>
-
-        <div>
-          <label for="categoria" class="block text-sm font-medium text-gray-700">ID da Categoria</label>
-          <input
-            v-model.number="produto.category_id"
-            id="categoria"
-            type="number"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          />
-        </div>
-
-        <div>
-          <label for="imagem" class="block text-sm font-medium text-gray-700">URL da Imagem</label>
-          <input
-            v-model="produto.image_url"
-            id="imagem"
-            type="url"
-            placeholder="https://exemplo.com/imagem.jpg"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -70,7 +37,7 @@
             type="submit"
             class="px-6 py-3 text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
           >
-            Salvar Produto
+            Salvar Categoria
           </button>
         </div>
       </form>
@@ -83,35 +50,29 @@ import { ref } from 'vue'
 
 const { $api } = useNuxtApp()
 
-const produto = ref({
+const categoria = ref({
   name: '',
   description: '',
-  price: null,
-  category_id: null,
-  image_url: '',
 })
 
 async function submitForm() {
   try {
-    await $api('/products', {
+    await $api('/categories', {
       method: 'POST',
-      body: produto.value,
+      body: categoria.value,
     })
-    alert('Produto cadastrado com sucesso!')
+    alert('Categoria cadastrada com sucesso!')
     resetForm()
   } catch (error) {
     console.error(error)
-    alert('Erro ao cadastrar produto.')
+    alert('Erro ao cadastrar categoria.')
   }
 }
 
 function resetForm() {
-  produto.value = {
+  categoria.value = {
     name: '',
     description: '',
-    price: null,
-    category_id: null,
-    image_url: '',
   }
 }
 </script>
