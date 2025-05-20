@@ -1,11 +1,8 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="w-full max-w-md p-6 bg-white rounded-xl shadow-lg">
-      <div class="flex justify-between items-center border-b pb-4 mb-4">
-        <h2 class="text-xl font-semibold text-gray-800">Cadastro de Produto</h2>
-        <button @click="handleClose" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">
-          &times;
-        </button>
+  <div class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+      <div class="border-b pb-4 mb-6">
+        <h1 class="text-xl font-semibold text-gray-800">Cadastro de Produto</h1>
       </div>
 
       <form @submit.prevent="submitForm" class="space-y-4">
@@ -50,12 +47,12 @@
           />
         </div>
 
-        <div class="flex justify-end space-x-4 pt-4 border-t mt-6">
-          <button type="button" @click="handleClose" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-            Cancelar
-          </button>
-          <button type="submit" class="px-4 py-2 text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
-            Salvar
+        <div class="pt-4 border-t mt-6">
+          <button
+            type="submit"
+            class="w-full px-6 py-3 text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            Salvar Produto
           </button>
         </div>
       </form>
@@ -64,19 +61,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue'
 
-const emit = defineEmits(['close']);
-const props = defineProps<{ show: boolean }>();
-
-const { $api } = useNuxtApp();
+const { $api } = useNuxtApp()
 
 const produto = ref({
   name: '',
   description: '',
   price: null,
   category_id: null,
-});
+})
+
+async function submitForm() {
+  try {
+    await $api('/products', {
+      method: 'POST',
+      body: produto.value,
+    })
+    alert('Produto cadastrado com sucesso!')
+    resetForm()
+  } catch (error) {
+    console.error(error)
+    alert('Erro ao cadastrar produto.')
+  }
+}
 
 function resetForm() {
   produto.value = {
@@ -84,29 +92,6 @@ function resetForm() {
     description: '',
     price: null,
     category_id: null,
-  };
-}
-
-function handleClose() {
-  emit('close');
-  resetForm();
-}
-
-async function submitForm() {
-  try {
-    await $api('/products', {
-      method: 'POST',
-      body: produto.value,
-    });
-    alert('Produto cadastrado com sucesso!');
-    handleClose();
-  } catch (error) {
-    console.error(error);
-    alert('Erro ao cadastrar produto.');
   }
 }
-
-watch(() => props.show, (val) => {
-  if (val) resetForm();
-});
 </script>

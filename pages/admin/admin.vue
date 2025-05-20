@@ -13,7 +13,7 @@
       <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         <div class="p-4 border-b border-gray-200 flex justify-between items-center">
           <h2 class="text-lg font-semibold text-gray-800">Pedidos em Andamento</h2>
-          <NuxtLink to="/admin/cadastrar-produto"
+          <NuxtLink to="/admin/cadastro-produto"
             class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-700 transition-colors">
             Cadastrar Produto
           </NuxtLink>
