@@ -18,14 +18,15 @@
     </NuxtLink>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-    <ProductList :products="produtos" />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+    <ProductList :products="produtos" @editar-produto="irParaEdicao" />
     <CategoryList :categories="categorias" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 const { $api } = useNuxtApp()
 
 import ProductList from '../../components/productList.vue'
@@ -33,6 +34,7 @@ import CategoryList from '../../components/categoryList.vue'
 
 const produtos = ref([])
 const categorias = ref([])
+const router = useRouter()
 
 onMounted(async () => {
   try {
@@ -46,4 +48,8 @@ onMounted(async () => {
     console.error('Erro ao buscar dados:', error)
   }
 })
+
+function irParaEdicao(productId: number) {
+  router.push(`/admin/editar-produto/${productId}`)
+}
 </script>
