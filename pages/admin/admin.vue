@@ -8,13 +8,18 @@
         </NuxtLink>
       </div>
     </header>
-    
+
     <div class="container mx-auto p-4">
       <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-        <div class="p-4 border-b border-gray-200">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
           <h2 class="text-lg font-semibold text-gray-800">Pedidos em Andamento</h2>
+          <NuxtLink to="/admin/listagem"
+            class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-700 transition-colors">
+            Listagem de Produtos e Categorias
+          </NuxtLink>
         </div>
-        
+
+
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -61,33 +66,25 @@
                   <div class="text-sm text-gray-900">R$ {{ pedido.total.toFixed(2) }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span 
-                    :class="[
-                      'px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
-                      getStatusClass(pedido.status)
-                    ]"
-                  >
+                  <span :class="[
+                    'px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
+                    getStatusClass(pedido.status)
+                  ]">
                     {{ getStatusText(pedido.status) }}
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div class="flex space-x-2">
-                    <button 
-                      @click="avancarStatus(pedido)"
-                      :disabled="pedido.status === 4"
-                      :class="[
-                        'px-3 py-1 rounded text-xs font-medium',
-                        pedido.status < 4 
-                          ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      ]"
-                    >
+                    <button @click="avancarStatus(pedido)" :disabled="pedido.status === 4" :class="[
+                      'px-3 py-1 rounded text-xs font-medium',
+                      pedido.status < 4
+                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    ]">
                       Avançar Status
                     </button>
-                    <button 
-                      @click="verDetalhes(pedido)"
-                      class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium hover:bg-blue-200"
-                    >
+                    <button @click="verDetalhes(pedido)"
+                      class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium hover:bg-blue-200">
                       Detalhes
                     </button>
                   </div>
@@ -96,12 +93,12 @@
             </tbody>
           </table>
         </div>
-        
+
         <div v-if="pedidos.length === 0" class="text-center py-8">
           <p class="text-gray-500">Nenhum pedido em andamento</p>
         </div>
       </div>
-      
+
       <!-- Modal de Detalhes do Pedido -->
       <div v-if="pedidoSelecionado" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -111,7 +108,7 @@
               <Icon name="lucide:x" class="w-5 h-5" />
             </button>
           </div>
-          
+
           <div class="p-4">
             <div class="mb-4">
               <h4 class="font-medium text-gray-800 mb-2">Informações do Cliente</h4>
@@ -122,15 +119,12 @@
                 <div>{{ pedidoSelecionado.cpf }}</div>
               </div>
             </div>
-            
+
             <div class="mb-4">
               <h4 class="font-medium text-gray-800 mb-2">Itens do Pedido</h4>
               <div class="space-y-2">
-                <div 
-                  v-for="(item, index) in pedidoSelecionado.itens" 
-                  :key="index"
-                  class="flex justify-between py-2 border-b border-gray-100"
-                >
+                <div v-for="(item, index) in pedidoSelecionado.itens" :key="index"
+                  class="flex justify-between py-2 border-b border-gray-100">
                   <div>
                     <span class="font-medium">{{ item.quantidade }}x</span> {{ item.nome }}
                   </div>
@@ -138,7 +132,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="mb-4">
               <h4 class="font-medium text-gray-800 mb-2">Resumo</h4>
               <div class="space-y-2 text-sm">
@@ -156,7 +150,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="mb-4">
               <h4 class="font-medium text-gray-800 mb-2">Pagamento</h4>
               <div class="text-sm">
@@ -166,24 +160,19 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="flex justify-end space-x-2 mt-6">
-              <button 
-                @click="pedidoSelecionado = null"
-                class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
+              <button @click="pedidoSelecionado = null"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
                 Fechar
               </button>
-              <button 
-                @click="avancarStatus(pedidoSelecionado); pedidoSelecionado = null"
-                :disabled="pedidoSelecionado.status === 4"
-                :class="[
+              <button @click="avancarStatus(pedidoSelecionado); pedidoSelecionado = null"
+                :disabled="pedidoSelecionado.status === 4" :class="[
                   'px-4 py-2 rounded',
-                  pedidoSelecionado.status < 4 
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
+                  pedidoSelecionado.status < 4
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                ]"
-              >
+                ]">
                 Avançar Status
               </button>
             </div>
