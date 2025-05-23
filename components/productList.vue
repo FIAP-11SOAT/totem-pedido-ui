@@ -5,7 +5,8 @@
       <li
         v-for="(product, index) in products"
         :key="index"
-        class="flex items-start space-x-4 py-4"
+        @click="$emit('editar-produto', product.id)"
+        class="flex items-start space-x-4 py-4 cursor-pointer hover:bg-gray-100 transition rounded-lg"
       >
         <img
           :src="product.image_url"
@@ -28,11 +29,14 @@
 <script setup lang="ts">
 defineProps<{
   products: Array<{
+    id: number;
     name: string;
     price: number;
     description: string;
     image_url: string;
     category?: { name: string };
-  }>
+  }>;
 }>()
+
+defineEmits(['editar-produto'])
 </script>
