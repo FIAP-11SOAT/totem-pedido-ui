@@ -86,15 +86,19 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useCarrinhoStore } from '~/stores/carrinho';
 import type { Product as BaseProduct } from '~/services/user-service';
 
 type Product = BaseProduct & { quantidade?: number };
 
 const { $api } = useNuxtApp();
+const carrinhoStore = useCarrinhoStore();
 
 const categoriaAtual = ref(1);
 const produtos = ref<Product[]>([]);
-const carrinho = ref<Product[]>([]);
+
+const carrinho = computed(() => carrinhoStore.carrinho);
+const totalCarrinho = computed(() => carrinhoStore.totalCarrinho);
 
 const categories = ref([
   { id: 1, name: 'Todos' },
@@ -120,17 +124,6 @@ const produtosFiltrados = computed(() => {
 });
 
 const adicionarAoCarrinho = (produto: Product) => {
-  const item = carrinho.value.find(i => i.id === produto.id);
-  if (item) {
-    item.quantidade = (item.quantidade || 1) + 1;
-  } else {
-    carrinho.value.push({ ...produto, quantidade: 1 });
-  }
+  carrinhoStore.adicionarAoCarrinho(produto);
 };
-
-const totalCarrinho = computed(() => {
-  return carrinho.value.reduce((total, item) => {
-    return total + item.price * (item.quantidade || 1);
-  }, 0);
-});
 </script>
