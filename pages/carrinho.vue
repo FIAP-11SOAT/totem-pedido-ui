@@ -8,7 +8,7 @@
         <h1 class="text-2xl font-bold text-gray-800">Seu Pedido</h1>
       </div>
     </header>
-    
+
     <div class="container mx-auto p-4">
       <div v-if="carrinho.length === 0" class="text-center py-12">
         <Icon name="lucide:shopping-cart" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -18,12 +18,12 @@
           Ver Cardápio
         </NuxtLink>
       </div>
-      
+
       <div v-else class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="p-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-800">Itens do Pedido</h2>
         </div>
-        
+
         <div class="divide-y divide-gray-200">
           <div 
             v-for="item in carrinho" 
@@ -31,14 +31,14 @@
             class="p-4 flex items-center"
           >
             <div class="w-16 h-16 rounded-lg overflow-hidden mr-4">
-              <img :src="item.imagem" :alt="item.nome" class="w-full h-full object-cover" />
+              <img :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" />
             </div>
-            
+
             <div class="flex-1">
-              <h3 class="font-medium text-gray-800">{{ item.nome }}</h3>
-              <p class="text-sm text-gray-600">R$ {{ item.preco.toFixed(2) }}</p>
+              <h3 class="font-medium text-gray-800">{{ item.name }}</h3>
+              <p class="text-sm text-gray-600">R$ {{ item.price.toFixed(2) }}</p>
             </div>
-            
+
             <div class="flex items-center">
               <button 
                 @click="diminuirQuantidade(item)"
@@ -46,9 +46,9 @@
               >
                 <Icon name="lucide:minus" class="w-4 h-4" />
               </button>
-              
+
               <span class="mx-3 w-6 text-center">{{ item.quantidade }}</span>
-              
+
               <button 
                 @click="aumentarQuantidade(item)"
                 class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -56,13 +56,13 @@
                 <Icon name="lucide:plus" class="w-4 h-4" />
               </button>
             </div>
-            
+
             <div class="ml-4 text-right">
-              <p class="font-semibold text-gray-800">R$ {{ (item.preco * item.quantidade).toFixed(2) }}</p>
+              <p class="font-semibold text-gray-800">R$ {{ (item.price * item.quantidade).toFixed(2) }}</p>
             </div>
           </div>
         </div>
-        
+
         <div class="p-4 bg-gray-50">
           <div class="flex justify-between py-2">
             <span class="text-gray-600">Subtotal</span>
@@ -79,7 +79,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4">
       <div class="container mx-auto">
         <button 
@@ -99,55 +99,32 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue';
-
-// Simulando dados do carrinho
-const carrinho = ref([
-  { 
-    id: 1, 
-    nome: 'X-Burger', 
-    descricao: 'Hambúrguer, queijo, alface, tomate e maionese', 
-    preco: 18.90, 
-    imagem: '/placeholder.svg?height=200&width=300', 
-    quantidade: 2
-  },
-  { 
-    id: 3, 
-    nome: 'Refrigerante', 
-    descricao: 'Lata 350ml', 
-    preco: 5.90, 
-    imagem: '/placeholder.svg?height=200&width=300', 
-    quantidade: 2
-  },
-]);
+<script setup lang="ts">
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useCarrinhoStore } from '~/stores/carrinho';
 
 const router = useRouter();
+const carrinhoStore = useCarrinhoStore();
 
-// Cálculos
-const subtotal = computed(() => {
-  return carrinho.value.reduce((total, item) => total + (item.preco * item.quantidade), 0);
-});
+const carrinho = computed(() => carrinhoStore.carrinho);
 
-const taxaServico = computed(() => {
-  return subtotal.value * 0.1; // 10% de taxa de serviço
-});
+const subtotal = computed(() =>
+  carrinho.value.reduce((total, item) => total + (item.price * (item.quantidade || 1)), 0)
+);
 
-const total = computed(() => {
-  return subtotal.value + taxaServico.value;
-});
+const taxaServico = computed(() => subtotal.value * 0.1);
+const total = computed(() => subtotal.value + taxaServico.value);
 
-// Métodos
-const aumentarQuantidade = (item) => {
-  item.quantidade += 1;
+const aumentarQuantidade = (item: typeof carrinho.value[0]) => {
+  item.quantidade = (item.quantidade || 1) + 1;
 };
 
-const diminuirQuantidade = (item) => {
-  if (item.quantidade > 1) {
-    item.quantidade -= 1;
+const diminuirQuantidade = (item: typeof carrinho.value[0]) => {
+  if ((item.quantidade || 1) > 1) {
+    item.quantidade = (item.quantidade || 1) - 1;
   } else {
-    // Remover item do carrinho
-    carrinho.value = carrinho.value.filter(i => i.id !== item.id);
+    carrinhoStore.carrinho = carrinhoStore.carrinho.filter(i => i.id !== item.id);
   }
 };
 
