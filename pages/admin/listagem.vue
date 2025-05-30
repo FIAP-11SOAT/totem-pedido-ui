@@ -20,7 +20,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
     <ProductList :products="produtos" @editar-produto="irParaEdicao" />
-    <CategoryList :categories="categorias" />
+    <CategoryList :categories="categorias" @editar-categoria="irParaEdicaoCategoria" />
   </div>
 </template>
 
@@ -52,4 +52,9 @@ onMounted(async () => {
 function irParaEdicao(productId: number) {
   router.push(`/admin/editar-produto/${productId}`)
 }
+
+function irParaEdicaoCategoria(categoryId: number) {
+  router.push(`/admin/editar-category/${categoryId}`)
+}
+
 </script>
