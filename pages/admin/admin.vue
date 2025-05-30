@@ -105,7 +105,6 @@ const pedidoSelecionado = ref(null)
 const mostrarModal = ref(false)
 const carregando = ref(false)
 
-// Carregar pedidos ao montar componente
 onMounted(async () => {
   try {
     carregando.value = true
@@ -119,7 +118,6 @@ onMounted(async () => {
   }
 })
 
-// Formata horário para exibição
 const formatarHora = (dataIso) => {
   const d = new Date(dataIso)
   return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
