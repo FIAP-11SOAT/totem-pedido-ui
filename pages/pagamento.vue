@@ -87,20 +87,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCarrinhoStore } from '~/stores/carrinho';
 
 const router = useRouter();
+const { $api } = useNuxtApp();
 const carrinhoStore = useCarrinhoStore();
 const carrinho = computed(() => carrinhoStore.carrinho);
 
-const metodosPagamento = ref([
+const metodosPagamento = [
   { id: 1, nome: 'Cartão de Crédito', descricao: 'Visa, Mastercard, Elo, etc.', icone: 'lucide:credit-card' },
   { id: 2, nome: 'Cartão de Débito', descricao: 'Visa, Mastercard, Elo, etc.', icone: 'lucide:credit-card' },
   { id: 3, nome: 'Dinheiro', descricao: 'Pague na retirada', icone: 'lucide:banknote' },
   { id: 4, nome: 'Pix', descricao: 'Pagamento instantâneo', icone: 'lucide:qr-code' },
-]);
+];
 
 const metodoPagamentoSelecionado = ref<number | null>(null);
 
@@ -109,14 +110,56 @@ const totalItens = computed(() => {
 });
 
 const subtotal = computed(() => {
-  return carrinho.value.reduce((total, item) => total + (item.price * (item.quantidade || 1)), 0);
+  return carrinho.value.reduce((total, item) => total + ((item.price || 0) * (item.quantidade || 1)), 0);
 });
 
 const taxaServico = computed(() => subtotal.value * 0.1);
 const total = computed(() => subtotal.value + taxaServico.value);
 
-const confirmarPedido = () => {
-  // Aqui você pode salvar o pedido, enviar pro backend ou armazenar localmente
-  router.push('/confirmacao');
+const orderId = ref<number | null>(null);
+
+onMounted(() => {
+  const storedId = localStorage.getItem('order_id');
+  if (storedId) {
+    orderId.value = parseInt(storedId);
+    console.log('[Pagamento] ID do pedido recuperado:', orderId.value);
+  } else {
+    const randomId = Math.floor(Math.random() * 900000) + 100000;
+    orderId.value = randomId;
+    localStorage.setItem('order_id', randomId.toString());
+    console.log('[Pagamento] Novo ID de pedido gerado:', orderId.value);
+  }
+});
+
+const confirmarPedido = async () => {
+  try {
+    if (!orderId.value) {
+      throw new Error('ID do pedido não foi gerado');
+    }
+    if (!metodoPagamentoSelecionado.value) {
+      alert('Selecione uma forma de pagamento.');
+      return;
+    }
+
+    console.log('Total calculado:', total.value); // Isso deve mostrar um número como 97.5
+
+    const payload = {
+      order_id: orderId.value,
+      amount: Number(total.value.toFixed(2)), // garante que seja número
+      title: 'Pix',
+    };
+
+    console.log('[Pagamento] Enviando payload:', payload);
+
+    const response = await $api('/payments', {
+      method: 'POST',
+      body: payload,
+    });
+    console.log('[Pagamento] Resposta da API:', response);
+    localStorage.removeItem('order_id');
+    alert('Pagamento realizado com sucesso!');
+  } catch (error) {
+    alert('Erro ao processar pagamento. Tente novamente.');
+  }
 };
 </script>
