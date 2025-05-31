@@ -3,12 +3,15 @@ import { Icon } from '@iconify/vue'
 
 import { ref, computed, onMounted } from 'vue';
 import { useCarrinhoStore } from '~/stores/carrinho';
-import type { Product as BaseProduct } from '~/services/user-service';
+import { useGlobalStore } from '~/stores/global';
 
+import type { Product as BaseProduct } from '~/services/products-service';
 type Product = BaseProduct & { quantidade?: number };
 
 const { $api } = useNuxtApp();
 const carrinhoStore = useCarrinhoStore();
+
+const globalStore = useGlobalStore();
 
 const categoriaAtual = ref(1);
 const produtos = ref<Product[]>([]);
@@ -31,7 +34,6 @@ const choiceCategory = async (name: string) => {
     return;
   }
   const response = await $api<Product[]>(`/products?category_name=${name}`);
-  console.log(response);
   produtos.value = response;
 };
 
@@ -51,6 +53,7 @@ const adicionarAoCarrinho = (produto: Product) => {
     <header class="bg-white shadow-md p-4 sticky top-0 z-10">
       <div class="container mx-auto flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Cardápio</h1>
+        <span class="">Bem Vindo: {{ globalStore.getUser?.name || "Anonymous" }}</span>
         <NuxtLink to="/carrinho" class="relative">
           <span class="sr-only">Carrinho</span>
           <div class="p-2 bg-emerald-100 rounded-full">

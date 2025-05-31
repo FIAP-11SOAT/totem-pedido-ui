@@ -1,5 +1,3 @@
-import type { NitroFetchRequest, $Fetch } from "nitropack"
-
 export interface Product {
     id: number
     name: string
@@ -11,9 +9,3 @@ export interface Product {
     updated_at: string
     category_id: number
 }
-
-export const userRepository = <T>(fetch: $Fetch<T, NitroFetchRequest>) => ({
-    async get(): Promise<Product[]> {
-        return fetch('/products')
-    }
-})

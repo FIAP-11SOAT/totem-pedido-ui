@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { Product as BaseProduct } from '~/services/user-service';
+import type { Product as BaseProduct } from '~/services/customer-service';
 
 type Product = BaseProduct & { quantidade?: number };
 

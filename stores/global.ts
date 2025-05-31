@@ -1,4 +1,3 @@
-import { get } from 'http';
 import { defineStore } from 'pinia';
 
 type User = {
@@ -15,7 +14,7 @@ type Order = {
 
 export const useGlobalStore = defineStore('global', {
     state: () => ({
-        user: {} as User,
+        user: {} as User | null,
         order: {}
     }),
     getters: {
@@ -27,7 +26,7 @@ export const useGlobalStore = defineStore('global', {
         }
     },
     actions: {
-        setUser(user: User) {
+        setUser(user: User | null) {
             this.user = user;
         },
         clearUser() {

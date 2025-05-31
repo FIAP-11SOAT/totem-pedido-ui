@@ -1,4 +1,4 @@
-import type { ApiClient } from '~/plugins/client-api.client';
+import type { ApiClient } from '~/plugins/client-api.sclient';
 
 declare module '#app' {
   interface NuxtApp {

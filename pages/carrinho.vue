@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+
+import { Icon } from '@iconify/vue'
+
 import { useCarrinhoStore } from '~/stores/carrinho';
 
 const router = useRouter();
@@ -10,36 +12,36 @@ const carrinhoStore = useCarrinhoStore();
 const carrinho = computed(() => carrinhoStore.carrinho);
 
 const subtotal = computed(() =>
-  carrinho.value.reduce((total, item) => total + (item.price * (item.quantidade || 1)), 0)
+  carrinho.value.reduce((total: number, item: any) => total + (item.price * (item.quantidade || 1)), 0)
 );
 
 const taxaServico = computed(() => subtotal.value * 0.1);
 const total = computed(() => subtotal.value + taxaServico.value);
 
-const aumentarQuantidade = (item: typeof carrinho.value[0]) => {
+const aumentarQuantidade = (item: any) => {
   item.quantidade = (item.quantidade || 1) + 1;
 };
 
-const diminuirQuantidade = (item: typeof carrinho.value[0]) => {
+const diminuirQuantidade = (item: any) => {
   if ((item.quantidade || 1) > 1) {
     item.quantidade = (item.quantidade || 1) - 1;
   } else {
-    carrinhoStore.carrinho = carrinhoStore.carrinho.filter(i => i.id !== item.id);
+    carrinhoStore.carrinho = carrinhoStore.carrinho.filter((i: any) => i.id !== item.id);
   }
 };
 
 const finalizarPedido = () => {
   router.push('/pagamento');
 };
-</script>
 
+</script>
 
 <template>
   <div class="min-h-screen bg-gray-100 pb-20">
     <header class="bg-white shadow-md p-4 sticky top-0 z-10">
       <div class="container mx-auto flex items-center">
         <NuxtLink to="/produtos" class="mr-4">
-          <Icon name="lucide:arrow-left" class="w-6 h-6 text-gray-700" />
+          <Icon icon="lucide:arrow-left" class="w-6 h-6 text-gray-700" />
         </NuxtLink>
         <h1 class="text-2xl font-bold text-gray-800">Seu Pedido</h1>
       </div>
@@ -47,7 +49,7 @@ const finalizarPedido = () => {
 
     <div class="container mx-auto p-4">
       <div v-if="carrinho.length === 0" class="text-center py-12">
-        <Icon name="lucide:shopping-cart" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <Icon icon="lucide:shopping-cart" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
         <h2 class="text-xl font-medium text-gray-700">Seu carrinho está vazio</h2>
         <p class="text-gray-500 mt-2">Adicione itens ao seu pedido</p>
         <NuxtLink to="/produtos" class="mt-6 inline-block px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
@@ -80,7 +82,7 @@ const finalizarPedido = () => {
                 @click="diminuirQuantidade(item)"
                 class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
               >
-                <Icon name="lucide:minus" class="w-4 h-4" />
+                <Icon icon="lucide:minus" class="w-4 h-4" />
               </button>
 
               <span class="mx-3 w-6 text-center">{{ item.quantidade }}</span>
@@ -89,7 +91,7 @@ const finalizarPedido = () => {
                 @click="aumentarQuantidade(item)"
                 class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
               >
-                <Icon name="lucide:plus" class="w-4 h-4" />
+                <Icon icon="lucide:plus" class="w-4 h-4" />
               </button>
             </div>
 
