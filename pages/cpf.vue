@@ -1,5 +1,3 @@
-import { useRouter } from "next/navigation"
-
 <template>
   <div class="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100">
     <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
@@ -44,19 +42,16 @@ import { useRouter } from "next/navigation"
 <script setup>
 import { ref } from 'vue';
 
+const { $api } = useNuxtApp();
+
 const cpf = ref('');
 const router = useRouter();
 
+const removerCaracteres = (cpf) => {
+    return cpf.replace(/\D/g, '');
+  };
+
 const verificarCPF = () => {
-  // Aqui você implementaria a verificação do CPF
-  // Se o CPF existir no sistema, redireciona para a página de produtos
-  // Se não existir, redireciona para a página de cadastro
-  
-  // Simulação: Se o CPF terminar com 0, consideramos como novo usuário
-  if (cpf.value.endsWith('0')) {
-    router.push('/cadastro');
-  } else {
-    router.push('/produtos');
-  }
+    
 };
 </script>

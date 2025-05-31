@@ -1,3 +1,39 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useCarrinhoStore } from '~/stores/carrinho';
+
+const router = useRouter();
+const carrinhoStore = useCarrinhoStore();
+
+const carrinho = computed(() => carrinhoStore.carrinho);
+
+const subtotal = computed(() =>
+  carrinho.value.reduce((total, item) => total + (item.price * (item.quantidade || 1)), 0)
+);
+
+const taxaServico = computed(() => subtotal.value * 0.1);
+const total = computed(() => subtotal.value + taxaServico.value);
+
+const aumentarQuantidade = (item: typeof carrinho.value[0]) => {
+  item.quantidade = (item.quantidade || 1) + 1;
+};
+
+const diminuirQuantidade = (item: typeof carrinho.value[0]) => {
+  if ((item.quantidade || 1) > 1) {
+    item.quantidade = (item.quantidade || 1) - 1;
+  } else {
+    carrinhoStore.carrinho = carrinhoStore.carrinho.filter(i => i.id !== item.id);
+  }
+};
+
+const finalizarPedido = () => {
+  router.push('/pagamento');
+};
+</script>
+
+
 <template>
   <div class="min-h-screen bg-gray-100 pb-20">
     <header class="bg-white shadow-md p-4 sticky top-0 z-10">
@@ -98,37 +134,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useCarrinhoStore } from '~/stores/carrinho';
-
-const router = useRouter();
-const carrinhoStore = useCarrinhoStore();
-
-const carrinho = computed(() => carrinhoStore.carrinho);
-
-const subtotal = computed(() =>
-  carrinho.value.reduce((total, item) => total + (item.price * (item.quantidade || 1)), 0)
-);
-
-const taxaServico = computed(() => subtotal.value * 0.1);
-const total = computed(() => subtotal.value + taxaServico.value);
-
-const aumentarQuantidade = (item: typeof carrinho.value[0]) => {
-  item.quantidade = (item.quantidade || 1) + 1;
-};
-
-const diminuirQuantidade = (item: typeof carrinho.value[0]) => {
-  if ((item.quantidade || 1) > 1) {
-    item.quantidade = (item.quantidade || 1) - 1;
-  } else {
-    carrinhoStore.carrinho = carrinhoStore.carrinho.filter(i => i.id !== item.id);
-  }
-};
-
-const finalizarPedido = () => {
-  router.push('/pagamento');
-};
-</script>
