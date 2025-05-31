@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCarrinhoStore } from '~/stores/carrinho';
 
@@ -97,69 +97,60 @@ const carrinhoStore = useCarrinhoStore();
 const carrinho = computed(() => carrinhoStore.carrinho);
 
 const metodosPagamento = [
-  { id: 1, nome: 'Cartão de Crédito', descricao: 'Visa, Mastercard, Elo, etc.', icone: 'lucide:credit-card' },
-  { id: 2, nome: 'Cartão de Débito', descricao: 'Visa, Mastercard, Elo, etc.', icone: 'lucide:credit-card' },
-  { id: 3, nome: 'Dinheiro', descricao: 'Pague na retirada', icone: 'lucide:banknote' },
-  { id: 4, nome: 'Pix', descricao: 'Pagamento instantâneo', icone: 'lucide:qr-code' },
+  { id: 1, nome: 'Pix', descricao: 'Pagamento instantâneo', icone: 'lucide:qr-code' },
 ];
 
 const metodoPagamentoSelecionado = ref<number | null>(null);
 
-const totalItens = computed(() => {
-  return carrinho.value.reduce((total, item) => total + (item.quantidade || 1), 0);
-});
+const totalItens = computed(
+  () => carrinho.value.reduce((total, item) => total + (item.quantidade || 1), 0)
+);
 
-const subtotal = computed(() => {
-  return carrinho.value.reduce((total, item) => total + ((item.price || 0) * (item.quantidade || 1)), 0);
-});
+const subtotal = computed(
+  () => carrinho.value.reduce((total, item) => total + ((item.price || 0) * (item.quantidade || 1)), 0)
+);
 
 const taxaServico = computed(() => subtotal.value * 0.1);
 const total = computed(() => subtotal.value + taxaServico.value);
 
-const orderId = ref<number | null>(null);
-
-onMounted(() => {
-  const storedId = localStorage.getItem('order_id');
-  if (storedId) {
-    orderId.value = parseInt(storedId);
-    console.log('[Pagamento] ID do pedido recuperado:', orderId.value);
-  } else {
-    const randomId = Math.floor(Math.random() * 900000) + 100000;
-    orderId.value = randomId;
-    localStorage.setItem('order_id', randomId.toString());
-    console.log('[Pagamento] Novo ID de pedido gerado:', orderId.value);
+async function confirmarPedido() {
+  if (!metodoPagamentoSelecionado.value) {
+    alert('Selecione uma forma de pagamento.');
+    return;
   }
-});
 
-const confirmarPedido = async () => {
   try {
-    if (!orderId.value) {
-      throw new Error('ID do pedido não foi gerado');
-    }
-    if (!metodoPagamentoSelecionado.value) {
-      alert('Selecione uma forma de pagamento.');
-      return;
-    }
+    const orderPayload = {
+      items: carrinho.value.map(item => ({
+        product_id: item.id,
+        quantity: item.quantidade,
+      })),
+    };
 
-    console.log('Total calculado:', total.value); // Isso deve mostrar um número como 97.5
+    const orderResponse = await $api('/orders', {
+      method: 'POST',
+      body: orderPayload,
+    });
 
-    const payload = {
-      order_id: orderId.value,
-      amount: Number(total.value.toFixed(2)), // garante que seja número
+    const orderId = orderResponse?.orderId;
+    if (!orderId) throw new Error('Erro ao criar pedido. ID não retornado.');
+
+    const paymentPayload = {
+      order_id: Number(orderId),
+      amount: Number(total.value.toFixed(2)),
       title: 'Pix',
     };
 
-    console.log('[Pagamento] Enviando payload:', payload);
-
-    const response = await $api('/payments', {
+    await $api('/payments', {
       method: 'POST',
-      body: payload,
+      body: paymentPayload,
     });
-    console.log('[Pagamento] Resposta da API:', response);
+
     localStorage.removeItem('order_id');
     alert('Pagamento realizado com sucesso!');
   } catch (error) {
+    console.error('[Erro] Falha ao confirmar pedido:', error);
     alert('Erro ao processar pagamento. Tente novamente.');
   }
-};
+}
 </script>
