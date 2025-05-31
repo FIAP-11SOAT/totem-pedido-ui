@@ -17,7 +17,7 @@
           </div>
           
           <div class="p-4">
-            <form @submit.prevent="buscarPedido" class="flex space-x-4">
+            <div class="flex space-x-4">
               <div class="flex-1">
                 <input 
                   v-model="numeroPedidoBusca" 
@@ -26,13 +26,7 @@
                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
-              <button 
-                type="submit" 
-                class="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-              >
-                Buscar
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
@@ -77,10 +71,6 @@
                 <span class="text-gray-600">Tempo Estimado:</span>
                 <span class="font-medium">{{ pedido.tempoEstimado }} min</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Itens:</span>
-                <span class="font-medium">{{ pedido.quantidadeItens }}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -96,94 +86,131 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue'
+const { $api } = useNuxtApp()
 
-// Dados de busca
-const numeroPedidoBusca = ref('');
+const numeroPedidoBusca = ref('')
+const pedidos = ref([])
+const pedidosEmAndamento = ref([])
+const carregando = ref(false)
 
-// Dados simulados de pedidos
-const pedidosEmAndamento = ref([
-  {
-    numero: '12345',
-    status: 1, // 1: Recebido, 2: Em Preparação, 3: Pronto, 4: Entregue
-    horaPedido: new Date(new Date().getTime() - 15 * 60000), // 15 minutos atrás
-    tempoEstimado: 20,
-    quantidadeItens: 3
-  },
-  {
-    numero: '12346',
-    status: 2,
-    horaPedido: new Date(new Date().getTime() - 10 * 60000), // 10 minutos atrás
-    tempoEstimado: 15,
-    quantidadeItens: 2
-  },
-  {
-    numero: '12347',
-    status: 3,
-    horaPedido: new Date(new Date().getTime() - 20 * 60000), // 20 minutos atrás
-    tempoEstimado: 15,
-    quantidadeItens: 4
-  }
-]);
-
-// Métodos
-const formatarHora = (data) => {
-  return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-};
+const formatarHora = (dataIso) => {
+  const d = new Date(dataIso)
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
 
 const getStatusText = (status) => {
   switch (status) {
-    case 1: return 'Recebido';
-    case 2: return 'Em Preparação';
-    case 3: return 'Pronto';
-    case 4: return 'Entregue';
-    default: return 'Desconhecido';
+    case 1: return 'Recebido'
+    case 2: return 'Em Preparação'
+    case 3: return 'Pronto'
+    case 4: return 'Entregue'
+    default: return 'Desconhecido'
   }
-};
+}
 
 const getStatusClass = (status) => {
   switch (status) {
-    case 1: return 'bg-blue-100 text-blue-800';
-    case 2: return 'bg-yellow-100 text-yellow-800';
-    case 3: return 'bg-emerald-100 text-emerald-800';
-    case 4: return 'bg-gray-100 text-gray-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case 1: return 'bg-blue-100 text-blue-800'
+    case 2: return 'bg-yellow-100 text-yellow-800'
+    case 3: return 'bg-emerald-100 text-emerald-800'
+    case 4: return 'bg-gray-100 text-gray-800'
+    default: return 'bg-gray-100 text-gray-800'
   }
-};
+}
 
 const getProgressoTexto = (status) => {
   switch (status) {
-    case 1: return '25%';
-    case 2: return '50%';
-    case 3: return '75%';
-    case 4: return '100%';
-    default: return '0%';
+    case 1: return '25%'
+    case 2: return '50%'
+    case 3: return '75%'
+    case 4: return '100%'
+    default: return '0%'
   }
-};
+}
 
 const getProgressoWidth = (status) => {
   switch (status) {
-    case 1: return 'w-1/4';
-    case 2: return 'w-1/2';
-    case 3: return 'w-3/4';
-    case 4: return 'w-full';
-    default: return 'w-0';
+    case 1: return 'w-1/4'
+    case 2: return 'w-1/2'
+    case 3: return 'w-3/4'
+    case 4: return 'w-full'
+    default: return 'w-0'
   }
-};
+}
 
-const buscarPedido = () => {
-  // Aqui você implementaria a lógica para buscar um pedido específico
-  console.log('Buscando pedido:', numeroPedidoBusca.value);
-  // Simulação: adicionar um pedido fictício à lista
-  if (numeroPedidoBusca.value) {
-    pedidosEmAndamento.value.unshift({
-      numero: numeroPedidoBusca.value,
-      status: 2,
-      horaPedido: new Date(),
-      tempoEstimado: 15,
-      quantidadeItens: 2
-    });
-    numeroPedidoBusca.value = '';
+const mapStatusTextoParaCodigo = (texto) => {
+  switch (texto?.toLowerCase()) {
+    case 'recebido': return 1
+    case 'preparando': return 2
+    case 'pronto': return 3
+    case 'entregue': return 4
+    default: return 0
   }
-};
+}
+
+// Carrega todos os pedidos inicialmente
+onMounted(async () => {
+  try {
+    carregando.value = true
+    const res = await $api('/orders')
+    pedidos.value = res
+
+    // Exibe todos os em andamento no início
+    pedidosEmAndamento.value = res
+      .filter(p => ['recebido', 'preparando', 'pronto'].includes(p.Status))
+      .map(p => ({
+        numero: p.ID,
+        status: mapStatusTextoParaCodigo(p.Status),
+        horaPedido: p.OrderDate,
+        tempoEstimado: 15,
+      }))
+  } catch (error) {
+    console.error('Erro ao buscar pedidos:', error)
+  } finally {
+    carregando.value = false
+  }
+})
+
+// Atualiza automaticamente ao digitar
+watch(numeroPedidoBusca, async (value) => {
+  const trimmed = value.trim()
+
+  if (!trimmed) {
+    // Se campo vazio, mostra todos os pedidos em andamento
+    pedidosEmAndamento.value = pedidos.value
+      .filter(p => ['recebido', 'preparando', 'pronto'].includes(p.Status))
+      .map(p => ({
+        numero: p.ID,
+        status: mapStatusTextoParaCodigo(p.Status),
+        horaPedido: p.OrderDate,
+        tempoEstimado: 15,
+      }))
+    return
+  }
+
+  const id = Number(trimmed)
+  if (!id || isNaN(id)) {
+    pedidosEmAndamento.value = []
+    return
+  }
+
+  try {
+    const res = await $api(`/orders/${id}`)
+    const statusCode = mapStatusTextoParaCodigo(res.Status)
+
+    if ([1, 2, 3].includes(statusCode)) {
+      pedidosEmAndamento.value = [{
+        numero: res.ID,
+        status: statusCode,
+        horaPedido: res.OrderDate,
+        tempoEstimado: 15,
+      }]
+    } else {
+      pedidosEmAndamento.value = []
+    }
+  } catch (error) {
+    pedidosEmAndamento.value = []
+  }
+})
 </script>
