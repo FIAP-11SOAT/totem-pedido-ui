@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import type { Product as BaseProduct } from '~/services/customer-service';
+import type { Product as BaseProduct } from '~/services/products-service';
 
-type Product = BaseProduct & { quantidade?: number };
+type Product = BaseProduct & { quantidade?: number, orderId?: number };
 
 export const useCarrinhoStore = defineStore('carrinho', {
   state: () => ({

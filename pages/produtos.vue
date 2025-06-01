@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 import { Icon } from '@iconify/vue'
 
 import { ref, computed, onMounted } from 'vue';
@@ -46,7 +47,6 @@ const adicionarAoCarrinho = (produto: Product) => {
   carrinhoStore.adicionarAoCarrinho(produto);
 };
 </script>
-
 
 <template>
   <div class="min-h-screen bg-gray-100 pb-20">

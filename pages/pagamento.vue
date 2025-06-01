@@ -1,3 +1,137 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useCarrinhoStore } from '~/stores/carrinho';
+
+import { toast, type ToastOptions } from 'vue3-toastify'
+
+const defaultToastOptions: ToastOptions = {
+  position: 'top-right',
+  autoClose: 3000,
+  transition: 'slide',
+}
+
+const { $api } = useNuxtApp();
+const router = useRouter();
+const carrinhoStore = useCarrinhoStore();
+
+const Alert = (message: string) => {
+  toast.info(message, defaultToastOptions)
+}
+
+const globalStore = useGlobalStore();
+
+const carrinho = computed(() => carrinhoStore.carrinho);
+
+const mostrarModal = ref(false);
+const qrcodeBase64 = ref('');
+const qrcodeString = ref('');
+
+const intervalRef = ref<NodeJS.Timeout | null>(null);
+const paymentID = ref<number | null>(null);
+
+const metodoPagamentoSelecionado = ref<number | null>(null);
+
+const metodosPagamento = [
+  { id: 1, nome: 'Pix', descricao: 'Pagamento instantâneo', icone: 'lucide:qr-code' },
+];
+
+const totalItens = computed(() =>
+  carrinho.value.reduce((total: number, item: any) => total + (item.quantidade || 1), 0)
+);
+
+const subtotal = computed(() =>
+  carrinho.value.reduce((total: number, item: any) => total + ((item.price || 0) * (item.quantidade || 1)), 0)
+);
+
+const taxaServico = computed(() => subtotal.value * 0.1);
+const total = computed(() => subtotal.value + taxaServico.value);
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function ValidarPagamento() {
+  try {
+    const result = await $api(`/payments/${paymentID.value}`, {
+      method: 'GET',
+    });
+
+    console.log('Status', result?.status);
+    if (result?.status !== "approved") {
+      console.log('Pagamento ainda não aprovado, aguardando...');
+      return;
+    }
+    console.log('Pagamento aprovado!');
+    if (intervalRef.value) {
+      clearInterval(intervalRef.value);
+      intervalRef.value = null;
+    }
+    mostrarModal.value = false;
+    Alert('Pagamento aprovado! Obrigado pelo seu pedido.');
+    await sleep(1500);
+    router.push('/monitor');
+    
+  } catch (error) {
+    console.error('[Erro] Falha ao validar pagamento:', error);
+  }
+}
+
+
+async function confirmarPedido() {
+  if (!metodoPagamentoSelecionado.value) {
+    Alert('Selecione uma forma de pagamento.');
+    return;
+  }
+
+  try {
+    const orderPayload = {
+      items: carrinho.value.map((item: any) => ({
+        product_id: item.id,
+        quantity: item.quantidade > 0 ? item.quantidade : 1,
+      })),
+    };
+
+    const orderResponse = await $api('/orders', {
+      method: 'POST',
+      body: orderPayload,
+    });
+
+    const orderId = orderResponse?.orderId;
+    if (!orderId) throw new Error('Erro ao criar pedido. ID não retornado.');
+
+    const userName = globalStore.getUser?.name || 'Usuário Anônimo';
+
+    const paymentPayload = {
+      order_id: Number(orderId),
+      amount: Number(total.value.toFixed(2)),
+      title: `Pedido #${orderId} (${userName})`,
+    };
+
+    const paymentResponse = await $api('/payments', {
+      method: 'POST',
+      body: paymentPayload,
+    });
+
+    paymentID.value = paymentResponse?.payment_id;
+
+    intervalRef.value = setInterval(async () => {
+      await ValidarPagamento();
+    }, 5000);
+
+    if (paymentResponse.qrcode_b64 && paymentResponse.qrcode) {
+      qrcodeBase64.value = paymentResponse.qrcode_b64;
+      qrcodeString.value = paymentResponse.qrcode;
+      mostrarModal.value = true;
+    } else {
+      throw new Error('QR Code não retornado.');
+    }
+  } catch (error) {
+    console.error('[Erro] Falha ao confirmar pedido:', error);
+    Alert('Erro ao processar pagamento. Tente novamente.');
+  }
+}
+</script>
+
+
 <template>
   <div class="min-h-screen bg-gray-100">
     <!-- Header -->
@@ -109,81 +243,3 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useCarrinhoStore } from '~/stores/carrinho';
-
-const { $api } = useNuxtApp();
-const router = useRouter();
-const carrinhoStore = useCarrinhoStore();
-
-const carrinho = computed(() => carrinhoStore.carrinho);
-
-const mostrarModal = ref(false);
-const qrcodeBase64 = ref('');
-const qrcodeString = ref('');
-
-const metodoPagamentoSelecionado = ref<number | null>(null);
-
-const metodosPagamento = [
-  { id: 1, nome: 'Pix', descricao: 'Pagamento instantâneo', icone: 'lucide:qr-code' },
-];
-
-const totalItens = computed(() =>
-  carrinho.value.reduce((total, item) => total + (item.quantidade || 1), 0)
-);
-
-const subtotal = computed(() =>
-  carrinho.value.reduce((total, item) => total + ((item.price || 0) * (item.quantidade || 1)), 0)
-);
-
-const taxaServico = computed(() => subtotal.value * 0.1);
-const total = computed(() => subtotal.value + taxaServico.value);
-
-async function confirmarPedido() {
-  if (!metodoPagamentoSelecionado.value) {
-    alert('Selecione uma forma de pagamento.');
-    return;
-  }
-
-  try {
-    const orderPayload = {
-      items: carrinho.value.map(item => ({
-        product_id: item.id,
-        quantity: item.quantidade > 0 ? item.quantidade : 1,
-      })),
-    };
-
-    const orderResponse = await $api('/orders', {
-      method: 'POST',
-      body: orderPayload,
-    });
-
-    const orderId = orderResponse?.order_id;
-    if (!orderId) throw new Error('Erro ao criar pedido. ID não retornado.');
-
-    const paymentPayload = {
-      order_id: Number(orderId),
-      amount: Number(total.value.toFixed(2)),
-      title: 'Pix',
-    };
-
-    const paymentResponse = await $api('/payments', {
-      method: 'POST',
-      body: paymentPayload,
-    });
-
-    if (paymentResponse.qrcode_b64 && paymentResponse.qrcode) {
-      qrcodeBase64.value = paymentResponse.qrcode_b64;
-      qrcodeString.value = paymentResponse.qrcode;
-      mostrarModal.value = true;
-    } else {
-      throw new Error('QR Code não retornado.');
-    }
-  } catch (error) {
-    console.error('[Erro] Falha ao confirmar pedido:', error);
-    alert('Erro ao processar pagamento. Tente novamente.');
-  }
-}
-</script>
