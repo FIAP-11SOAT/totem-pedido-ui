@@ -126,11 +126,11 @@ const formatarHora = (dataIso) => {
 // Texto legível para status
 const getStatusText = (status) => {
   switch (status) {
-    case 'pendente': return 'Pagamento Pendente'
-    case 'recebido': return 'Recebido'
-    case 'preparando': return 'Em Preparação'
-    case 'pronto': return 'Pronto'
-    case 'entregue': return 'Entregue'
+    case 'payment_pending': return 'Pagamento Pendente'
+    case 'received': return 'Recebido'
+    case 'preparing': return 'Em Preparação'
+    case 'ready': return 'Pronto'
+    case 'completed': return 'Entregue'
     default: return 'Desconhecido'
   }
 }
@@ -138,18 +138,18 @@ const getStatusText = (status) => {
 // Classes de cor para status
 const getStatusClass = (status) => {
   switch (status) {
-    case 'pendente': return 'bg-orange-100 text-orange-800'
-    case 'recebido': return 'bg-blue-100 text-blue-800'
-    case 'preparando': return 'bg-yellow-100 text-yellow-800'
-    case 'pronto': return 'bg-emerald-100 text-emerald-800'
-    case 'entregue': return 'bg-gray-100 text-gray-800'
+    case 'payment_pending': return 'bg-orange-100 text-orange-800'
+    case 'received': return 'bg-blue-100 text-blue-800'
+    case 'preparing': return 'bg-yellow-100 text-yellow-800'
+    case 'ready': return 'bg-emerald-100 text-emerald-800'
+    case 'completed': return 'bg-gray-100 text-gray-800'
     default: return 'bg-gray-100 text-gray-800'
   }
 }
 
 // Avança o status do pedido
 const avancarStatus = async (pedido) => {
-  const statusOrder = ['pendente', 'recebido', 'preparando', 'pronto', 'entregue']
+  const statusOrder = ['payment_pending', 'received', 'preparing', 'ready', 'completed']
   const currentIndex = statusOrder.indexOf(pedido.Status)
 
   if (currentIndex !== -1 && currentIndex < statusOrder.length - 1) {
